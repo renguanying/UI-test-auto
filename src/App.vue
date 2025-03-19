@@ -1,30 +1,21 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view/>
+  <div>app</div>
+  <div>{{$store.state.username}}</div>
+  <button type="submit" @click="mutationsFn"></button>
+  <button type="submit" @click="actionsFn"></button>
 </template>
+<script setup>
+import { useStore } from 'vuex'
+const store = useStore()
+console.log(store.state.moduleA.username)
+console.log(store.getters['moduleA/newName'])
 
-<style lang="less">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+const mutationsFn = () => {
+  // store.commit('updateName', 'ls')
+  store.commit('moduleA/updateName', 'll')
 }
-
-nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
+const actionsFn = () => {
+  // store.dispatch('updateName', 'ww')
+  store.dispatch('moduleA/updateName', 'ww')
 }
-</style>
+</script>
