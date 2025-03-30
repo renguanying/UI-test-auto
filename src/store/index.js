@@ -1,34 +1,21 @@
 import { createStore } from 'vuex'
-const moduleA = {
-  namespaced: true,
-  state: {
-    username: 'zs'
-  },
-  getters: {
-    newName (state) {
-      return state.username + '!@'
-    }
-  },
-  mutations: {
-    updateName (state, payload) {
-      state.username = 'ls' + payload
-    }
-  },
-  actions: {
-    updateName (ctx, payload) {
-      setTimeout(() => {
-        ctx.commit('updateName', payload)
-      }, 1000)
-    }
-  }
-}
-const moduleB = {
+import createPersistedState from 'vuex-persistedstate'
+import pages from './modules/pages'
+import testcase from './modules/testcase'
 
-}
 
 export default createStore({
   modules: {
-    moduleA,
-    moduleB
-  }
+    pages,
+    testcase
+  },
+  plugins:[
+    //默认存储在localstorage上
+    createPersistedState({
+      //本地持久化存储的名字
+      key: 'ui-test-auto',
+      //指定需要缓存的模块
+      paths: ['pages']
+    })
+  ]
 })
