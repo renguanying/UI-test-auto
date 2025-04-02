@@ -3,7 +3,7 @@
     <!-- 搜索栏 -->
     <div class="api-header">
     
-    <el-form :inline="true" :model="searchForm" class="form-sty">
+    <el-form :inline="true" :model="searchForm" class="form-sty" ref="searchRef">
         <div class="form-label">搜索</div>
         <el-form-item label="所属部门" class="depart-select">
         <el-select v-model="searchForm.depart_id" placeholder="请选择部门" style="width:200px"  @change="handleDepartChange">
@@ -33,8 +33,8 @@
     <el-divider style="height:1px;margin:5px;" />
     <el-form :inline="true" :model="runForm" class="form-sty">
         <div class="form-label">执行</div>
-        <el-form-item label="环境地址">
-            <el-select v-model="runForm.env_url" placeholder="请选择部门" style="width:200px"  @change="handleEnvChange">
+        <el-form-item label="*环境地址">
+            <el-select v-model="runForm.env_url" placeholder="请选择环境地址" style="width:200px"  @change="handleEnvChange">
                 <el-option
                     v-for="depart in departOptions"
                     :key="depart.id"
@@ -67,12 +67,12 @@
     <el-table-column
         prop="depart_name"
         label="部门名称"
-        width="120"
+        width="110"
     />
     <el-table-column
         prop="project_name"
         label="项目名称"
-        width="120"
+        width="110"
     />
     <el-table-column
         prop="api_url"
@@ -80,26 +80,37 @@
         min-width="150"
     />
     <el-table-column
-        prop="api_method_str"
+        prop="api_method"
         label="请求方式"
         min-width="80"
     />
     <el-table-column
-        prop="api_header"
+        prop="api_headers"
         label="header"
-        min-width="150"
+        min-width="130"
     />
     <el-table-column
-        prop="api_data"
+        prop="api_params"
         label="请求参数"
-        min-width="150"
+        min-width="130"
     />
     <el-table-column
         prop="validate_result"
         label="预期结果"
-        width="120"
+        width="100"
     />
-    
+    <el-table-column
+        prop="create_time"
+        label="创建时间"
+        :formatter="formatDate"
+        width="100"
+    />
+    <el-table-column
+        prop="update_time"
+        label="更新时间"
+        :formatter="formatDate"
+        width="100"
+    />
     <el-table-column label="操作" width="150">
         <template #default="scope">
         <div class="operation-buttons">
@@ -135,12 +146,16 @@ import { getApiByDepartId, addApi, updateApi, deleteApi, deleteMultiple } from '
 import { ElMessage, ElMessageBox } from 'element-plus'
 import router from '@/router'
 import { requestMethods } from '@/api/constants' 
+import { useStore } from 'vuex'
+import eventBus from '@/utils/eventBus'
+const store = useStore()
 const tableData = ref([])//记录所有项目数据
 const departOptions = ref([])//记录所有部门数据
 const projectOptions = ref([])//记录项目数据，有时候是所有数据，有时候是根据部门筛选出的部分数据
 const dialogProjectOptions = ref([])//记录对话框中的项目数据
 const allProjectOption = ref([])//记录所有项目数据
 
+const searchRef = ref(null)
 //页码处理
 const currentPage = ref(1)
 const pageSize = ref(20)
@@ -167,9 +182,15 @@ const rules = {
     environment_url: [{ required: true, message: '请输入环境地址', trigger: 'blur' }]
 }
 const formRef = ref(null)
-
+// 格式化时间
+const formatDate = (row, column) => {
+  const value = row[column.property]
+  if (!value) return ''
+  return dayjs(value).format('YYYY-MM-DD HH:mm:ss')
+}
 const getAllApi = async (departId, projectId) => {
     if(departId === 0 && projectId === 0) { //获取所有的情况
+        // searchRef.value.resetField()
         searchForm.depart_id = ''
         searchForm.project_id = ''
     }
@@ -177,17 +198,17 @@ const getAllApi = async (departId, projectId) => {
     console.log('param:' + JSON.stringify(requestParams))
     await getApiByDepartId(requestParams).then((result) => {
         nextTick(() => {
-            console.log('result:' + JSON.stringify(result.records))
-            result.records.forEach(element => {
-                // element.api_method
-                requestMethods.forEach(item => {
-                    if(element.api_method === item.id){
-                        // element = {...element,api_method_str:item.method}
-                        //添加了一个新的属性，可以直接写
-                        element.api_method_str = item.name
-                    }
-                })
-            })
+            // console.log('result:' + JSON.stringify(result.records))
+            // result.records.forEach(element => {
+            //     // element.api_method
+            //     requestMethods.forEach(item => {
+            //         if(element.api_method === item.id){
+            //             // element = {...element,api_method_str:item.method}
+            //             //添加了一个新的属性，可以直接写
+            //             element.api_method_str = item.name
+            //         }
+            //     })
+            // })
             console.log('result:' + JSON.stringify(result.records))
             tableData.value = result.records
             total.value = result.total
@@ -197,17 +218,18 @@ const getAllApi = async (departId, projectId) => {
 onMounted(async () => {
     console.log('执行')
     await getAllApi(0, 0)
-    //获取所有部门
-    getAllDepartment().then((result) => {
-        departOptions.value = result.data
-    })
-    getAllProject().then((result) => {
-        console.log('result:' + JSON.stringify(result))
-        projectOptions.value = result.data
-        allProjectOption.value = result.data
-        dialogProjectOptions.value = result.data
-    })
-})
+    if(store.state.projectAndDepartment.allDepartments.length === 0){
+        //获取所有部门
+        store.dispatch('projectAndDepartment/getDepartment')
+    }
+    departOptions.value = store.state.projectAndDepartment.allDepartments
+    if(store.state.projectAndDepartment.allProjects.length === 0){
+        store.dispatch('projectAndDepartment/getProject')
+    }
+    allProjectOption.value = store.state.projectAndDepartment.allProjects
+    projectOptions.value = store.state.projectAndDepartment.allProjects
+    console.log('project:' + JSON.stringify(projectOptions.value))
+}) 
 
 // const addEnv1 = (data) => {
 //     addEnv(data).then((result) => {
@@ -216,7 +238,9 @@ onMounted(async () => {
 // }
 
 const handleNewProject = () => {
-    router.push('/newapi')
+    router.push({ name: 'apiNew' })
+    // 触发事件
+    eventBus.emit('addTab', { title: '新建接口', name: '/apiset/api' })
     // dialogTitle.value = '新建项目'
     // dialogProjectOptions.value = allProjectOption.value
     // Object.assign(envForm, {
@@ -258,7 +282,9 @@ const submitForm = () => {
 }
 
 const handleEdit = (index, row) => {
-    // // 编辑项目
+    router.push({ name: 'apiEdit', params: { id: row.id } })
+    eventBus.emit('addTab', { title: '编辑接口', name: `/apiset/api/${row.id}` })
+    // 编辑项目
     // console.log('编辑项目:', row)
     // dialogTitle.value = '编辑项目'
     // Object.assign(envForm, {

@@ -25,6 +25,7 @@ module.exports = {
     //禁用对缩进字数的限制
     indent: 'off',
     'comma-spacing': ['error', { before: false, after: true }],
+    'space-before-function-paren': 'off',
     //禁用文件名必须是多个word
     'vue/multi-word-component-names': 'off',
     //禁用必须在文件末尾添加换行符

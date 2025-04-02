@@ -18,9 +18,10 @@
 </template>
 
 <script setup>
-import { ref, defineExpose, watch} from 'vue'
+import { ref, defineExpose, watch, onMounted} from 'vue'
 import { useRoute } from 'vue-router'
 import router from '@/router'
+import eventBus from '@/utils/eventBus'
 
 const route = useRoute()
 const activeTabName = ref('/')//用来记录当前激活状态的tab的name值，初始值是首页的name'/'
@@ -36,6 +37,11 @@ const addTab = (val) => {
   //修改点击后的name值
   activeTabName.value = val.name
 }
+onMounted(() => {
+  //事件总线监听addTab方法
+  eventBus.on('addTab', addTab)
+})
+
 //点击菜单里任意一个时
 const clickTab = (val) => {
   activeTabName.value = val.props.name//设置当前活跃的tab的name值

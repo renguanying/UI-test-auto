@@ -2,7 +2,7 @@
 <div class="env-list-container">
     <!-- 搜索栏 -->
     <div class="env-header">
-    <el-form :inline="true" :model="searchForm" class="search-form">
+    <el-form :inline="true" :model="searchForm" class="search-form" ref="searchRef">
       <el-form-item label="所属部门" class="depart-select">
         <el-select v-model="searchForm.depart_id" placeholder="请选择部门" class="select_sty"  @change="handleDepartChange">
             <el-option
@@ -24,16 +24,16 @@
         </el-select>
         </el-form-item>
         <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleSearch">搜索</el-button>
-        <el-button  @click="handleReset">重置</el-button>
+            <el-button type="primary" icon="Search" @click="handleSearch">搜索</el-button>
+            <el-button  @click="handleReset">重置</el-button>
         </el-form-item>
     </el-form>
     </div>
     
     <div class="env-body">
     <div class="header">
-    <el-button type="primary" icon="Plus" @click="handleNewProject">新建项目</el-button>
-    <el-button icon="Delete" @click="handleBatchDelete">批量删除</el-button>
+        <el-button type="primary" icon="Plus" @click="handleNewProject">新建环境</el-button>
+        <el-button icon="Delete" @click="handleBatchDelete">批量删除</el-button>
     </div>
     <el-table :data="tableData" style="width: 100%" @selection-change="handleSelectionChange">
     <el-table-column
@@ -136,12 +136,15 @@ import { deleteMultiple, addEnv, updateEnv, getByDepartByProject, deleteEnv} fro
 import { getAllDepartment } from '@/api/department'
 import { getAllProject, getProjectByDepartId } from '@/api/project'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useStore } from 'vuex'
+const store = useStore()
 const tableData = ref([])//记录所有项目数据
 const departOptions = ref([])//记录所有部门数据
 const projectOptions = ref([])//记录项目数据，有时候是所有数据，有时候是根据部门筛选出的部分数据
 const dialogProjectOptions = ref([])//记录对话框中的项目数据
 const allProjectOption = ref([])//记录所有项目数据
 
+const searchRef = ref(null)
 //页码处理
 const currentPage = ref(1)
 const pageSize = ref(20)
@@ -175,8 +178,7 @@ const formRef = ref(null)
 
 const getAllEnv = async (departId, projectId) => {
     if(departId === 0 && projectId === 0) { //获取所有的情况
-        searchForm.depart_id = ''
-        searchForm.project_id = ''
+        searchRef.value.resetFields()
     }
     const requestParams = {current: currentPage.value, size: pageSize.value, departId, projectId}
     console.log('param:' + JSON.stringify(requestParams))
@@ -188,28 +190,27 @@ const getAllEnv = async (departId, projectId) => {
     })
 }
 onMounted(async () => {
-    console.log('执行')
     await getAllEnv(0, 0)
-    //获取所有部门
-    getAllDepartment().then((result) => {
-        departOptions.value = result.data
-    })
-    getAllProject().then((result) => {
-        console.log('result:' + JSON.stringify(result))
-        projectOptions.value = result.data
-        allProjectOption.value = result.data
-        dialogProjectOptions.value = result.data
-    })
+    if(store.state.projectAndDepartment.allDepartments.length === 0){
+        //获取所有部门
+        store.dispatch('projectAndDepartment/getDepartment')
+    }
+    departOptions.value = store.state.projectAndDepartment.allDepartments
+    if(store.state.projectAndDepartment.allProjects.length === 0){
+        store.dispatch('projectAndDepartment/getProject')
+    }
+    allProjectOption.value = store.state.projectAndDepartment.allProjects
+    projectOptions.value = store.state.projectAndDepartment.allProjects
+    dialogProjectOptions.value = store.state.projectAndDepartment.allProjects
 })
 
 const addEnv1 = (data) => {
     addEnv(data).then((result) => {
-    console.log('result.data:' + result.data)
 })  
 }
 
 const handleNewProject = () => {
-    dialogTitle.value = '新建项目'
+    dialogTitle.value = '新建环境'
     dialogProjectOptions.value = allProjectOption.value
     Object.assign(envForm, {
         id: '',
@@ -229,7 +230,6 @@ const submitForm = () => {
     if (valid) {
         if (envForm.id) { //编辑项目
         const index = tableData.value.findIndex(item => item.id === envForm.id)
-        console.log('index:' + index + '   id:' + envForm.id)
         if (index !== -1) {
             await updateEnv({ ...envForm})
             ElMessage.success('修改成功')
@@ -251,7 +251,6 @@ const submitForm = () => {
 
 const handleEdit = (index, row) => {
     // 编辑项目
-    console.log('编辑项目:', row)
     dialogTitle.value = '编辑项目'
     Object.assign(envForm, {
         id: row.id,
@@ -310,13 +309,11 @@ const handleBatchDelete = () => {
 }
 const handleSelectionChange = (val) => {
     // 多选逻辑
-    console.log('多选:', val)
     selectedRows.value = val
 }
 const handleSizeChange = async (val) => {
     pageSize.value = val
     // 加载数据
-    console.log(`每页 ${val} 条`)
     currentPage.value = 1
     await getAllEnv(0, 0)
 }
@@ -324,12 +321,10 @@ const handleSizeChange = async (val) => {
 const handleCurrentChange = async (val) => {
     currentPage.value = val
     // 加载数据
-    console.log(`当前页: ${val}`)
     await getAllEnv(0, 0)
 }
 //点击搜索后的处理
 const handleSearch = async () => {
-    console.log('searchForm:' + searchForm.depart_id + '  :' + searchForm.project_id)
     if(searchForm.depart_id === '' && searchForm.project_id === '') {
         ElMessage.warning('请选择部门或者项目')
     }else{
@@ -346,18 +341,14 @@ const handleReset = async () => {
     }
 }
 const handleDepartChange = async (value) => {
-    console.log('选择的部门ID:', value)
     // console.log('选择的部门名称:', departOptions.value.find(item => item.id === value)?.departName);
     await getProjectByDepartId({departId: value}).then((result) => {
-        console.log('result:' + JSON.stringify(result))
         projectOptions.value = result.data
     })
 }
 const handleDialogDepartChange = async (value) => {
-    console.log('选择的部门ID:', value)
     // console.log('选择的部门名称:', departOptions.value.find(item => item.id === value)?.departName);
     await getProjectByDepartId({departId: value}).then((result) => {
-        console.log('result:' + JSON.stringify(result))
         dialogProjectOptions.value = result.data
     })
 }

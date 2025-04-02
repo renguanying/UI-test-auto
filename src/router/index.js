@@ -21,13 +21,22 @@ const routes = [
       { path: '/testcases', component: TestCases },
       { path: '/apiset', component: ApiSet },
       { path: '/apiresult', component: ApiResult },
-      { path: '/newapi', component: NewApiSet }
+      { path: '/apiset/api', name: 'apiNew', component: NewApiSet }, //新建接口
+      { path: '/apiset/api/:id', name: 'apiEdit', component: NewApiSet } //编辑接口
     ]
   }
 ]
 const router = createRouter({
   //createWebHashHistory()是使用hash模型，是有#号的。createWebHistory()是history模式，是没#的
   history: createWebHashHistory(),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    // 如果保存了滚动位置，则返回该位置
+    if (savedPosition) {
+      return savedPosition
+    }
+    // 否则，返回顶部
+    return { top: 0 }
+  }
 })
 export default router

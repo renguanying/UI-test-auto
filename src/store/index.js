@@ -1,21 +1,21 @@
 import { createStore } from 'vuex'
 import createPersistedState from 'vuex-persistedstate'
 import pages from './modules/pages'
-import testcase from './modules/testcase'
+import projectAndDepartment from './modules/projectAndDepartment'
 
 
 export default createStore({
   modules: {
     pages,
-    testcase
+    projectAndDepartment
   },
   plugins:[
     //默认存储在localstorage上
     createPersistedState({
       //本地持久化存储的名字
-      key: 'ui-test-auto',
+      key: 'test-auto',
       //指定需要缓存的模块
-      paths: ['pages']
+      paths: ['projectAndDepartment']
     })
   ]
 })

@@ -2,7 +2,7 @@
 <div class="project-list-container">
    <!-- 搜索栏 -->
   <div class="project-header">
-    <el-form :inline="true" :model="searchForm" class="search-form">
+    <el-form :inline="true" :model="searchForm" class="search-form" ref="searchRef">
       <el-form-item label="所属部门" class="depart-select">
         <el-select v-model="searchForm.depart_id" placeholder="请选择部门" class="select_sty">
         <el-option
@@ -121,8 +121,11 @@ import dayjs from 'dayjs'
 import { deleteMultiple, getAllProjectByPage, addProject, updateProject, deleteProject, getProjectByDepartByPage } from '@/api/project'
 import { getAllDepartment } from '@/api/department'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useStore } from 'vuex'
+const store = useStore()
 const tableData = ref([])//记录所有项目数据
 const departOptions = ref([])//记录所有部门数据
+const searchRef = ref(null)
 //页码处理
 const currentPage = ref(1)
 const pageSize = ref(20)
@@ -158,7 +161,7 @@ const formatDate = (row, column) => {
   return dayjs(value).format('YYYY-MM-DD HH:mm:ss')
 }
 const getAllProjectByPageFun = (current, size) => {
-    searchForm.depart_id = ''
+    searchRef.value.resetFields()
     const requestParams = {current, size}
     console.log('param:' + JSON.stringify(requestParams))
     getAllProjectByPage(requestParams).then((result) => {
@@ -171,11 +174,12 @@ const getAllProjectByPageFun = (current, size) => {
 }
 onMounted(() => {
     console.log('执行')
+    if(store.state.projectAndDepartment.allDepartments.length === 0){
+        //获取所有部门
+        store.dispatch('projectAndDepartment/getDepartment')
+    }
+    departOptions.value = store.state.projectAndDepartment.allDepartments
     getAllProjectByPageFun(currentPage.value, pageSize.value)
-    //获取所有部门
-    getAllDepartment().then((result) => {
-        departOptions.value = result.data
-    })
 })
 
 const addProject1 = (data) => {
@@ -321,7 +325,7 @@ const handleSearch = () => {
 const handleReset = async () => {
     if(searchForm.depart_id !== '') {
         await getAllProjectByPageFun(currentPage.value, pageSize.value)
-        searchForm.depart_id = ''
+        searchRef.value.resetFields()
     }
 }
 

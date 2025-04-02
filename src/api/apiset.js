@@ -3,6 +3,10 @@ import request from '@/utils/request'
 export const getApiByDepartId = (data) => {
     return request('/api/allApiByPage', 'get', data)
 }
+//根据id查询
+export const getApiById = (data) => {
+    return request('/api/getApiById', 'get', data)
+}
 //新建
 export const addApi = (data) => {
     return request('/api/addApi', 'post', data)
