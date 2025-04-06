@@ -20,8 +20,11 @@ export const deleteMultiple = (id) => {
 // export const getAllByPage = (data) => {
 //     return request('/env/allByPage', 'get', data)
 // }
-//返回所有项目,分页,按部门
+//返回所有项目,分页,按部门按项目
+export const getByPageByDepartByProject = (data) => {
+    return request('/env/getByPageByDepartByProject', 'get', data)
+}
+//返回所有项目,不分页,按部门按项目
 export const getByDepartByProject = (data) => {
-    console.log('data:' + data)
     return request('/env/getByDepartByProject', 'get', data)
 }

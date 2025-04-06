@@ -132,7 +132,7 @@
 <script setup>
 import { reactive, ref, nextTick, onMounted } from 'vue'
 import dayjs from 'dayjs'
-import { deleteMultiple, addEnv, updateEnv, getByDepartByProject, deleteEnv} from '@/api/environment'
+import { deleteMultiple, addEnv, updateEnv, getByPageByDepartByProject, deleteEnv} from '@/api/environment'
 import { getAllDepartment } from '@/api/department'
 import { getAllProject, getProjectByDepartId } from '@/api/project'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -179,11 +179,14 @@ const formRef = ref(null)
 const getAllEnv = async (departId, projectId) => {
     if(departId === 0 && projectId === 0) { //获取所有的情况
         searchRef.value.resetFields()
+        searchRef.value.depart_id = ''
+        searchRef.value.projectId = ''
     }
     const requestParams = {current: currentPage.value, size: pageSize.value, departId, projectId}
     console.log('param:' + JSON.stringify(requestParams))
-    await getByDepartByProject(requestParams).then((result) => {
+    await getByPageByDepartByProject(requestParams).then((result) => {
         nextTick(() => {
+            console.log('env   result:' + JSON.stringify(result))
             tableData.value = result.records
             total.value = result.total
         })
@@ -336,6 +339,8 @@ const handleSearch = async () => {
 //重置
 const handleReset = async () => {
     if(searchForm.depart_id !== '' || searchForm.project_id !== '') {
+        searchForm.depart_id = ''
+        searchForm.project_id = ''
         await getAllEnv(0, 0)
         projectOptions.value = allProjectOption.value
     }

@@ -129,8 +129,8 @@
             <div class="tabs">
                 <el-tabs v-model="responseActiveTab">
                     <el-tab-pane label="Body" name="body"></el-tab-pane>
-                    <el-tab-pane label="Cookie" name="cookie"></el-tab-pane>
                     <el-tab-pane label="Header" name="header"></el-tab-pane>
+                    <el-tab-pane label="Cookie" name="cookie"></el-tab-pane>
                 </el-tabs>
             </div>
             <div class="content">
@@ -139,7 +139,25 @@
                         <el-input
                             type="textarea"
                             :rows="10"
-                            v-model="responseContent"
+                            v-model="responseBody"
+                        ></el-input>
+                    </div>
+                </div>
+                <div v-if="responseActiveTab === 'cookie'">
+                    <div class="json-viewer">
+                        <el-input
+                            type="textarea"
+                            :rows="10"
+                            v-model="responseCookie"
+                        ></el-input>
+                    </div>
+                </div>
+                <div v-if="responseActiveTab === 'header'">
+                    <div class="json-viewer">
+                        <el-input
+                            type="textarea"
+                            :rows="10"
+                            v-model="responseHeader"
                         ></el-input>
                     </div>
                 </div>
@@ -171,6 +189,9 @@ const departOptions = ref([])
 const projectOptions = ref([])
 const allProjectOption = ref([])
 const responseCode = ref('')
+const responseBody = ref('')//响应body
+const responseHeader = ref('')//响应header
+const responseCookie = ref('')//响应cookie
 const queryBody = ref('')
 const queryHeaders = ref('')
 const queryCookie = ref('')
@@ -258,7 +279,17 @@ const testRequest = async () => {
         const requestData = {api_url:apiForm.api_url, api_method:apiForm.api_method, api_params:JSON.stringify(queryParams.value), api_body:queryBody.value, api_headers:queryHeaders.value, api_cookie:queryCookie.value}
         console.log('requestData:' + JSON.stringify(requestData))
         await testApiRunOne(requestData).then((result) => {
+            if(result.header){
+                responseHeader.value = JSON.stringify(result.header)
+            }
+            if(result.cookie){
+                responseCookie.value = JSON.stringify(result.cookie)
+            }
+            if(result.data){
+                responseBody.value = result.data
+            }
             console.log('result:' + JSON.stringify(result))
+            // responseBody.value = JSON.stringify(result)
         })
     }
 }
@@ -275,7 +306,7 @@ const saveApiInfo = () => {
                 ElMessage.success('修改成功')
             })
         } else { //新建
-            const requestData = {...apiForm, api_params:JSON.stringify(queryParams.value), api_body:queryBody.value, api_headers:queryHeaders.value, api_cookie:queryCookie.value, create_time:nowDateTime, update_time: nowDateTime}
+            const requestData = {...apiForm, api_params:JSON.stringify(queryParams.value), api_body:queryBody.value, api_headers:queryHeaders.value, api_cookie:queryCookie.value, create_time:nowDateTime, update_time: nowDateTime, api_result:''}
             console.log('data:' + JSON.stringify(requestData))
             await addApi(requestData).then((result) => {
                 console.log('result:' + JSON.stringify(result))

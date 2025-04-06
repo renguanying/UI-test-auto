@@ -4,3 +4,7 @@ import request from '@/utils/request'
 export const testApiRunOne = (data) => {
     return request('/apirun/runOne', 'post', data)
 }
+//批量运行多个
+export const runMultiple = (data) => {
+    return request('/apirun/runMultiple', 'post', data)
+}
