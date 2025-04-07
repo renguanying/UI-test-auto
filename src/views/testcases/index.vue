@@ -55,7 +55,64 @@
                     </el-table-column>
                 </el-table>
             </div>
-                
+            <div class="operation-container">
+                <div class="button-group">
+                    <el-dropdown>
+                        <el-button type="primary" plain>浏览器操作<el-icon class="el-icon--right"><arrow-down /></el-icon></el-button>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item>打开网页</el-dropdown-item>
+                                <el-dropdown-item>关闭页面</el-dropdown-item>
+                                <el-dropdown-item>切换窗口</el-dropdown-item>
+                                <el-dropdown-item>前进</el-dropdown-item>
+                                <el-dropdown-item>后退</el-dropdown-item>
+                                <el-dropdown-item>刷新</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                    <el-dropdown>
+                        <el-button type="primary" plain>鼠标操作<el-icon class="el-icon--right"><arrow-down /></el-icon></el-button>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item>点击</el-dropdown-item>
+                                <el-dropdown-item>鼠标滚动</el-dropdown-item>
+                                <el-dropdown-item>鼠标移动</el-dropdown-item>
+                                <el-dropdown-item>鼠标拖拽</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                    <el-dropdown>
+                        <el-button type="primary" plain>键盘操作</el-button>
+                    </el-dropdown>
+                    <el-dropdown>
+                        <el-button type="primary" plain>等待事件</el-button>
+                    </el-dropdown>
+                    <el-dropdown>
+                        <el-button type="primary" plain>循环<el-icon class="el-icon--right"><arrow-down /></el-icon></el-button>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                            <el-dropdown-item>while循环</el-dropdown-item>
+                            <el-dropdown-item>for循环</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                    <el-dropdown>
+                        <el-button type="primary" plain>if判断</el-button>
+                    </el-dropdown>
+                    <el-dropdown>
+                        <el-button type="primary" plain>断言</el-button>
+                    </el-dropdown>
+                    <el-dropdown>
+                        <el-button type="primary" plain>更多操作<el-icon class="el-icon--right"><arrow-down /></el-icon></el-button>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                            <el-dropdown-item>1</el-dropdown-item>
+                            <el-dropdown-item>2</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                </div>
+             </div>
         </div>
         <div class="step-details" v-if="isDetailsOpen">
             <div class="step-details-header">
@@ -167,13 +224,48 @@ const handleNodeClick = async (data, node) => {
     }
     .right-content{
         background-color: #fff;
-        padding:10px;
+        padding:0 10px 10px;
         border-radius:5px;
         flex:1;
         height:100%;
+        display: flex;
+        justify-content: space-between;
+        flex-direction: column;
+        align-items: center;
+        gap:5px;
         .header{
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            height:32px;
+            width:100%;
+            padding:20px;
+            border-bottom: 1px solid #e5e3e3;
+        }
+        .steps-table{
+            flex: 1;
+            width:100%;
+        }
+       
+        .operation-container{
+            width:100%;
+            padding: 0;
+            // height:80px;
+            .button-group {
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                width: 100%;
+                padding: 10px;
+                box-sizing: border-box;
+                border-radius: 5px;
+                border:1px solid #e5e3e3;
+             }
+            .el-button {
+            padding: 8px 15px;
+            font-size: 14px;
+            }
+          
         }
     }
     .custom-tree-node {

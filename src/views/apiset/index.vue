@@ -320,7 +320,7 @@ const handleRun = async () => {
     }
     const requestBody = {rows:selectedRows.value, environment_url:envUrl.value}
     await runMultiple(requestBody)
-    ElMessage.success('批量执行')
+    ElMessage.success('批量执行中，请去“执行结果”页按查看结果')
 }
 </script>
 
