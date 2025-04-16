@@ -339,10 +339,10 @@ const handleDelete = (index, row) => {
 .api-client {
     width:100%;
    padding: 10px;
-   /deep/ .el-tabs__item{
+   :deep(.el-tabs__item){
         font-size:12px;
     }
-    .tabs /deep/ .el-tabs__header{
+    .tabs :deep(.el-tabs__header){
         margin: 0 0 5px;
     }
   .header {

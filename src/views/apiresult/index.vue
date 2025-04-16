@@ -1,9 +1,21 @@
 <template>
     <div class="result-list">
         <div class="left-content">
-            <el-link v-for="(item,index) in runResultData" :key="index" @click="handleClick(item)">
-                {{`${item.run_environment}：${item.run_time}`}}
-            </el-link>
+            <el-tree
+                style="max-width: 600px"
+                :data="runResult"
+                :props="defaultProps"
+                highlight-current
+                accordion
+                @node-click="handleNodeClick"
+            >
+            <template #default="{ node }">
+                <div class="custom-tree-node">
+                    <span>{{ node.label }}</span>
+                    <!-- <el-button link @click="remove(node, data)" icon="Delete" class="hover-button"></el-button> -->
+                </div>
+            </template>
+            </el-tree>
         </div>
         <div class="right-content">
             <el-table :data="tableData" style="width: 100%">
@@ -72,6 +84,7 @@ import { ref, onMounted } from 'vue'
 import dayjs from 'dayjs'
 const runResultData = ref([])
 const tableData = ref([])
+const runResult = ref([])
 // 格式化时间
 const formatDate = (row, column) => {
   const value = row[column.property]
@@ -82,11 +95,16 @@ onMounted(async () => {
     await selectAllResults().then((result) => {
         console.log('result:' + JSON.stringify(result))
         runResultData.value = result
+
+        runResultData.value.forEach(item => {
+            runResult.value.push({label:`${item.run_environment}：${item.run_time}`, id:item.id, result:item.run_result})
+        })
+        console.log('runDataresult:' + JSON.stringify(result))
     })
 })
-const handleClick = (item) => {
-    const result = JSON.parse(item.run_result)
-    console.log('runresult:' + JSON.stringify(result))
+const handleNodeClick = async (data, node) => {
+    // console.log('nodeClick:' + JSON.stringify(data))
+    const result = JSON.parse(data.result)
     tableData.value = result
 }
 // 切换展开和折叠

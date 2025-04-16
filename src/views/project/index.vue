@@ -232,12 +232,12 @@ const handleEdit = (index, row) => {
   // 编辑项目
   console.log('编辑项目:', row)
   dialogTitle.value = '编辑项目'
-  Object.assign(projectForm, {
+  projectForm.value = {
     id: row.id,
     project_name: row.project_name,
     project_desc: row.project_desc,
     depart_id: row.depart_id
-  })
+  }
   dialogVisible.value = true
 }
 //删除一个

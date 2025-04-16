@@ -3,6 +3,7 @@
         <div class="left-content">
             <el-tree
                 style="max-width: 600px"
+                highlight-current
                 :data="casesInfoShow"
                 :props="defaultProps"
                 accordion
@@ -13,11 +14,11 @@
                     <span>{{ node.label }}</span>
                     <!-- 限制只是叶子节点展示添加按钮 -->
                     <div v-if="node.isLeaf">
-                        <el-button link @click="remove(node, data)" icon="Delete"></el-button>
+                        <el-button link @click="remove(node, data)" icon="Delete" class="hover-button"></el-button>
                     </div>
                     <div v-else>
-                        <el-tooltip content="添加用例" placement="top">
-                            <el-button link @click="append(data)" icon="CirclePlus"></el-button>
+                        <el-tooltip content="添加用例" placement="top" effect="light">
+                            <el-button link @click="append(data)" icon="CirclePlus" class="hover-button"></el-button>
                         </el-tooltip>
                     </div>
                 </div>
@@ -40,33 +41,32 @@
                     <el-table-column type="selection" width="55"></el-table-column>
                     <el-table-column type="index" label="序号" width="50"></el-table-column>
                     <el-table-column label="步骤名称" min-width="200">
-                    <template #default="scope">
-                        <div class="step-item">
-                        <el-icon><document /></el-icon>
-                        <span>{{ scope.row.name }}</span>
-                        </div>
-                    </template>
+                        <template #default="scope">
+                            <div class="step-item">
+                            <!-- <el-icon><document /></el-icon> -->
+                            <span>{{ scope.row.name }}</span>
+                            </div>
+                        </template>
                     </el-table-column>
                     <el-table-column label="操作" width="200">
-                    <template #default="scope">
-                        <el-button type="primary" size="small" @click="editStep(scope.row)">查看结果</el-button>
-                        <el-button type="success" size="small" @click="editStep(scope.row)">...</el-button>
-                    </template>
+                        <template #default="scope">
+                            <el-button type="primary" size="small" @click="editStep(scope.row)" v-if="runResult">查看结果</el-button>
+                            <el-button icon="Delete" size="small" @click="editStep(scope.row)">删除</el-button>
+                        </template>
                     </el-table-column>
                 </el-table>
             </div>
             <div class="operation-container">
                 <div class="button-group">
-                    <el-dropdown>
+                    <el-dropdown @command="handleBrowser">
                         <el-button type="primary" plain>浏览器操作<el-icon class="el-icon--right"><arrow-down /></el-icon></el-button>
                         <template #dropdown>
                             <el-dropdown-menu>
-                                <el-dropdown-item>打开网页</el-dropdown-item>
-                                <el-dropdown-item>关闭页面</el-dropdown-item>
-                                <el-dropdown-item>切换窗口</el-dropdown-item>
-                                <el-dropdown-item>前进</el-dropdown-item>
-                                <el-dropdown-item>后退</el-dropdown-item>
-                                <el-dropdown-item>刷新</el-dropdown-item>
+                                <el-dropdown-item command="open">打开网页</el-dropdown-item>
+                                <el-dropdown-item command="close">关闭页面</el-dropdown-item>
+                                <el-dropdown-item command="forward">前进</el-dropdown-item>
+                                <el-dropdown-item command="back">后退</el-dropdown-item>
+                                <el-dropdown-item command="refresh">刷新</el-dropdown-item>
                             </el-dropdown-menu>
                         </template>
                     </el-dropdown>
@@ -114,41 +114,86 @@
                 </div>
              </div>
         </div>
-        <div class="step-details" v-if="isDetailsOpen">
-            <div class="step-details-header">
-                <h3>步骤名称</h3>
-                <el-button type="danger" circle @click="closeDetails">×</el-button>
-            </div>
-            <!-- <div class="step-details-content">
-                <el-form label-width="120px">
-                <el-form-item label="步骤名称">
-                    <el-input v-model="selectedStep.name"></el-input>
-                </el-form-item>
-                <el-form-item label="*输入URL">
-                    <el-input v-model="selectedStep.url"></el-input>
-                </el-form-item>
-                <el-form-item label="追加页面">
-                    <el-checkbox v-model="selectedStep.appendPage">追加页面（勾选后则在新的页面打开URL，不勾选覆盖当前URL）</el-checkbox>
-                </el-form-item>
-                <el-form-item label="手动配置设置">
-                    <el-switch v-model="selectedStep.manualConfig"></el-switch>
-                </el-form-item>
-                <el-form-item label="元素同步方式">
-                    <el-select v-model="selectedStep.syncMethod">
-                    <el-option label="与元素管理相互实时同步" value="real-time"></el-option>
-                    <el-option label="手动同步" value="manual"></el-option>
-                    </el-select>
-                </el-form-item>
-                </el-form>
-            </div>
-            <div class="step-details-actions">
-                <el-button>设置</el-button>
-                <el-button>断言</el-button>
-                <el-button>关联提取</el-button>
-            </div>
-            <div class="step-details-footer">
-                <el-button @click="closeDetails">保存</el-button>
-            </div> -->
+        <div class="drawer-content">
+            <el-drawer v-model="drawerVisible" direction="rtl">
+                <template #header>
+                    <span style=" font-size: 14px;color: black;">{{drawerTitle}}</span>
+                    <!-- <el-divider style="height:1px;"></el-divider> -->
+                </template>
+                <template #default>
+                    
+                     <!-- 步骤名称 -->
+                    <el-form class="stepForm">
+                        <el-form-item label="步骤名称">
+                            <el-input placeholder="请输入步骤名称" v-model="formData.stepName"></el-input>
+                        </el-form-item>
+                        <!-- 输入URL -->
+                        <el-form-item label="*输入URL">
+                            <el-input placeholder="请输入URL" v-model="formData.url"></el-input>
+                        </el-form-item>
+                        <!-- 追加页面 -->
+                        <el-form-item>
+                            <el-checkbox v-model="formData.appendPage">
+                                追加页面（默认在当前页面打开，勾选则在新的页面打开URL）
+                            </el-checkbox>
+                        </el-form-item>
+                        <el-form-item label="断言">
+                            <el-dropdown trigger="click">
+                                <el-button>添加断言<el-icon class="el-icon--right"><arrow-down /></el-icon></el-button>
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item>断言元素存在</el-dropdown-item>
+                                        <el-dropdown-item>断言元素不存在</el-dropdown-item>
+                                        <!-- <el-dropdown-item>断言文本存在</el-dropdown-item>
+                                        <el-dropdown-item>断言文本不存在</el-dropdown-item>
+                                        <el-dropdown-item>断言元素属性</el-dropdown-item>
+                                        <el-dropdown-item>断言页面属性</el-dropdown-item> -->
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
+                        </el-form-item>
+                        <el-card class="assertion-card" shadow="never">
+                            <template #header>
+                                <div class="card-header">
+                                    <span>断言元素存在</span>
+                                    <div>
+                                        <el-button icon="Delete" @click="removeAssertion" class="btn-transparent"/>
+                                        <el-button icon="ArrowDown" class="btn-transparent"/>
+                                    </div>
+                                </div>
+                            </template>
+                            <el-form style="font-size:12px;">
+                                <!-- 断言类型 -->
+                                <el-form-item label="*断言类型">
+                                    <el-select v-model="assertForm.assertionType" placeholder="请选择断言类型">
+                                        <el-option label="断言元素存在" value="exists"></el-option>
+                                        <el-option label="断言元素不存在" value="notExists"></el-option>
+                                    </el-select>
+                                </el-form-item>
+
+                                <!-- 目标元素 -->
+                                <el-form-item label="*目标元素">
+                                    <div class="target-element-actions">
+                                        <el-button @click="selectElement">选择元素</el-button>
+                                        <el-button @click="defineElement">自定义元素</el-button>
+                                    </div>
+                                </el-form-item>
+
+                            <!-- 元素目录和选择 -->
+                            <div class="element-selection">
+                                
+                            </div>
+                            </el-form>
+                        </el-card>
+                    </el-form>
+                </template>
+                <template #footer>
+                    <div style="flex: auto">
+                        <el-button @click="cancelClick">取消</el-button>
+                        <el-button type="primary" @click="confirmClick">保存</el-button>
+                    </div>
+                </template>
+            </el-drawer>
         </div>
     </div>
 </template>
@@ -158,20 +203,29 @@ import { getAllTestCases, getSteps } from '@/api/testcase'
 import { ref, onMounted } from 'vue'
 import dayjs from 'dayjs'
 const testCasesInfo = ref(null)
-const showButton = ref(true)
 const casesInfoShow = ref([])
-const tableData = ref([])
+const drawerVisible = ref(false)//初始设置抽屉不显示
+const runResult = ref(false)//如果当前用例运行后，则设置为true，没运行则设置为false
+const assertForm = ref({
+    assertionType: 'exists',
+    elementName: '',
+    selectedElement: 'baiduSearchButton'
+})
 
 const steps = ref([
-  { id: 1, name: '打开百度...', url: 'https://www.baidu.com', appendPage: true, manualConfig: false, syncMethod: 'real-time' },
-  { id: 2, name: '点击输入框', url: '', appendPage: false, manualConfig: false, syncMethod: 'real-time' },
-  { id: 3, name: '在输入框...', url: '', appendPage: false, manualConfig: false, syncMethod: 'real-time' },
-  { id: 4, name: '点击确定...', url: '', appendPage: false, manualConfig: false, syncMethod: 'real-time' }
+  { id: 1, name: '打开百度', url: 'https://www.baidu.com'},
+  { id: 2, name: '点击输入框', url: '', appendPage: false},
+  { id: 3, name: '在输入框', url: '', appendPage: false},
+  { id: 4, name: '点击确定', url: '', appendPage: false}
 ])
-
+const formData = ref({
+      stepName: '',
+      url: '',
+      appendPage: false
+    })
 const selectedStep = ref(null)
 const isDetailsOpen = ref(false)
-
+const drawerTitle = ref('')
 
 // 格式化时间
 const formatDate = (row, column) => {
@@ -202,6 +256,32 @@ const handleNodeClick = async (data, node) => {
         // tableData.value = result
     })
   }
+}
+const showAssert = () => {
+
+}
+const handleBrowser = (command) => {
+    drawerVisible.value = true
+    
+    let title = ''
+    switch(command){
+        case 'open':
+            title = '打开网页'  
+            break
+        case 'close':
+            title = '关闭网页' 
+            break
+        case 'forward':
+            title = '向前' 
+            break
+        case 'back':
+            title = '向后' 
+            break
+        case 'refresh':
+            title = '刷新页面' 
+            break
+    }
+    drawerTitle.value = title
 }
 </script>
 
@@ -275,6 +355,57 @@ const handleNodeClick = async (data, node) => {
         justify-content: space-between;
         font-size: 14px;
         padding-right: 8px;
+     }
+     .hover-button {
+        visibility: hidden; /* 默认隐藏按钮 */
+        transition: visibility 0.3s; /* 添加过渡效果 */
+     }
+     .custom-tree-node:hover .hover-button {
+        visibility: visible; /* 鼠标悬停时显示按钮 */
+     }
+     .drawer-content{
+        :deep(.el-drawer__header){
+            height:35px;
+            padding: 20px;
+            margin-bottom: 0px;
+            border-bottom:1px solid rgb(221, 219, 219);
         }
+
+        :deep(.el-drawer__body){
+            padding:0;
+           
+            .stepForm{
+                // label-width:100px;
+                padding:10px 20px;
+
+            }
+        }
+        :deep(.el-drawer__footer){
+            border-top:1px solid rgb(221, 219, 219);
+        }
+        :deep(.el-card__header){
+            padding:0;
+        }
+        .assertion-card {
+            margin-bottom: 10px;    
+            :deep(.el-form-item__label){
+                font-size:12px;
+            }
+        }
+        // .btn-transparent{
+            // border:none !important;
+            // background-color: transparent;
+            // margin-right:5px;
+        // }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            // margin-bottom: 15px;
+            padding:5px 10px;
+        }
+
+
+     }
 }
 </style>

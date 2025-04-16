@@ -71,7 +71,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits, defineExpose } from 'vue'
+import { ref, watch, defineEmits} from 'vue'
 import { useRouter, useRoute } from 'vue-router'//用来监听路由变化
 
 

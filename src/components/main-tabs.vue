@@ -74,7 +74,7 @@ defineExpose({addTab})
 
 <style lang="less" scoped>
 // 利用深度穿透，不然不起作用
-.demo-tabs /deep/ .el-tabs__header{
+.demo-tabs :deep(.el-tabs__header){
   margin: 0 0 5px;
 }
 </style>
